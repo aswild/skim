@@ -19,7 +19,6 @@ pub struct ExactMatchingParam {
 
 #[derive(Debug)]
 pub struct ExactEngine {
-    query: String,
     query_regex: Option<Regex>,
     rank_builder: Arc<RankBuilder>,
     inverse: bool,
@@ -55,7 +54,6 @@ impl ExactEngine {
         };
 
         ExactEngine {
-            query: query.to_string(),
             query_regex,
             rank_builder: Default::default(),
             inverse: param.inverse,
