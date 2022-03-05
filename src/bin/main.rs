@@ -614,7 +614,7 @@ fn get_terminal_height() -> io::Result<usize> {
         match ioctl(STDOUT_FILENO, TIOCGWINSZ, &mut size) {
             0 => Ok(size.ws_row as usize),
             -1 => Err(io::Error::last_os_error()),
-            ret => panic!("TIOCGWINSZ ioctl returned unexpected value {}", ret),
+            ret => panic!("TIOCGWINSZ ioctl returned unexpected value {ret}"),
         }
     }
 }
