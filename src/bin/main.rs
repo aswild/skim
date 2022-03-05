@@ -10,9 +10,11 @@ extern crate time;
 use derive_builder::Builder;
 use std::env;
 use std::fs::File;
-use std::io::{BufRead, BufReader, BufWriter, Write};
+use std::io::{self, BufRead, BufReader, BufWriter, Read, Write};
 
 use clap::{App, Arg, ArgMatches};
+use tuikit::term::TermHeight;
+
 use skim::prelude::*;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -62,6 +64,8 @@ Usage: sk [options]
     --no-height          Disable height feature
     --min-height=HEIGHT  Minimum height when --height is given by percent
                          (default: 10)
+    --auto-height        Shrink height when stdin input contains fewer than
+                         HEIGHT lines.
     --margin=MARGIN      Screen Margin (TRBL / TB,RL / T,RL,B / T,R,B,L)
                          e.g. (sk --margin 1,10%)
     -p, --prompt '> '    prompt string for query mode
@@ -195,6 +199,7 @@ fn real_main() -> Result<i32, std::io::Error> {
         .arg(Arg::with_name("min-height").long("min-height").multiple(true).takes_value(true).default_value("10"))
         .arg(Arg::with_name("height").long("height").multiple(true).takes_value(true).default_value("100%"))
         .arg(Arg::with_name("no-height").long("no-height").multiple(true))
+        .arg(Arg::with_name("auto-height").long("auto-height").multiple(true))
         .arg(Arg::with_name("no-clear").long("no-clear").multiple(true))
         .arg(Arg::with_name("no-mouse").long("no-mouse").multiple(true))
         .arg(Arg::with_name("preview").long("preview").multiple(true).takes_value(true))
@@ -306,8 +311,6 @@ fn real_main() -> Result<i32, std::io::Error> {
         options.selector = Some(Rc::new(selector));
     }
 
-    let options = options;
-
     //------------------------------------------------------------------------------
     let bin_options = BinOptionsBuilder::default()
         .filter(opts.values_of("filter").and_then(|vals| vals.last()))
@@ -319,12 +322,18 @@ fn real_main() -> Result<i32, std::io::Error> {
 
     //------------------------------------------------------------------------------
     // read from pipe or command
-    let rx_item = if atty::isnt(atty::Stream::Stdin) {
-            let rx_item = cmd_collector.borrow().of_bufread(BufReader::new(std::io::stdin()));
-            Some(rx_item)
+    let rx_item: Option<SkimItemReceiver> = (|| {
+        if atty::isnt(atty::Stream::Stdin) {
+            Some(match stdin_autoheight_reader(&mut options) {
+                Some(reader) => cmd_collector.borrow().of_bufread(reader),
+                None => cmd_collector.borrow().of_bufread(BufReader::new(io::stdin())),
+            })
         } else {
-         None
-    };
+            None
+        }
+    })();
+
+    let options = options;
 
     //------------------------------------------------------------------------------
     // filter mode
@@ -395,6 +404,7 @@ fn parse_options<'a>(options: &'a ArgMatches) -> SkimOptions<'a> {
         .min_height(options.values_of("min-height").and_then(|vals| vals.last()))
         .no_height(options.is_present("no-height"))
         .height(options.values_of("height").and_then(|vals| vals.last()))
+        .auto_height(options.is_present("auto-height"))
         .margin(options.values_of("margin").and_then(|vals| vals.last()))
         .preview(options.values_of("preview").and_then(|vals| vals.last()))
         .cmd(options.values_of("cmd").and_then(|vals| vals.last()))
@@ -558,4 +568,53 @@ pub fn filter(
         })?;
 
     Ok(if num_matched == 0 { 1 } else { 0 })
+}
+
+fn stdin_autoheight_reader(options: &mut SkimOptions) -> Option<impl BufRead> {
+    if !options.auto_height {
+        return None;
+    }
+
+    let height = match Skim::parse_height_string(&options.height?) {
+        TermHeight::Fixed(h) => std::cmp::max(h, 3),
+        TermHeight::Percent(p) => {
+            let th = get_terminal_height().ok()?;
+            std::cmp::max((th * p) / 100, 3)
+        }
+    };
+
+    let stdin = io::stdin();
+    let mut stdin_lock = stdin.lock();
+
+    let mut buf = Vec::new();
+    let mut lines_read = 0;
+    while lines_read < height - 2 {
+        match stdin_lock.read_until(b'\n', &mut buf) {
+            Ok(0) | Err(_) => break,
+            _ => lines_read += 1,
+        }
+    }
+
+    // ugh, the options struct needs an Option<&'a str> but we need to dynamically generate
+    // it. Hack: just leak it so we get a 'static lifetime
+    let new_height_string = format!("{}", std::cmp::max(lines_read + 2, 3));
+    let new_height_str: &'static str = Box::leak(new_height_string.into_boxed_str());
+    options.height = Some(new_height_str);
+    options.min_height = Some(new_height_str);
+
+    drop(stdin_lock);
+    Some(io::Cursor::new(buf).chain(BufReader::new(stdin)))
+}
+
+fn get_terminal_height() -> io::Result<usize> {
+    use nix::libc::{ioctl, winsize, STDOUT_FILENO, TIOCGWINSZ};
+    unsafe {
+        // safety: winsize is just integers that can safely be zeroed
+        let mut size: winsize = std::mem::zeroed();
+        match ioctl(STDOUT_FILENO, TIOCGWINSZ, &mut size) {
+            0 => Ok(size.ws_row as usize),
+            -1 => Err(io::Error::last_os_error()),
+            ret => panic!("TIOCGWINSZ ioctl returned unexpected value {}", ret),
+        }
+    }
 }

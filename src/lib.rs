@@ -357,7 +357,7 @@ impl Skim {
 
     // 10 -> TermHeight::Fixed(10)
     // 10% -> TermHeight::Percent(10)
-    fn parse_height_string(string: &str) -> TermHeight {
+    pub fn parse_height_string(string: &str) -> TermHeight {
         if string.ends_with('%') {
             TermHeight::Percent(string[0..string.len() - 1].parse().unwrap_or(100))
         } else {
