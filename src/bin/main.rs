@@ -466,6 +466,7 @@ fn parse_options<'a>(options: &'a ArgMatches) -> SkimOptions<'a> {
         .exit0(options.is_present("exit-0"))
         .sync(options.is_present("sync"))
         .no_clear_if_empty(options.is_present("no-clear-if-empty"))
+        .read0(options.is_present("read0"))
         .build()
         .unwrap()
 }
@@ -583,13 +584,15 @@ fn stdin_autoheight_reader(options: &mut SkimOptions) -> Option<impl BufRead> {
         }
     };
 
+    let delim = if options.read0 { b'\0' } else { b'\n' };
     let stdin = io::stdin();
     let mut stdin_lock = stdin.lock();
 
     let mut buf = Vec::new();
     let mut lines_read = 0;
+
     while lines_read < height - 2 {
-        match stdin_lock.read_until(b'\n', &mut buf) {
+        match stdin_lock.read_until(delim, &mut buf) {
             Ok(0) | Err(_) => break,
             _ => lines_read += 1,
         }

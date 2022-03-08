@@ -57,6 +57,7 @@ pub struct SkimOptions<'a> {
     pub sync: bool,
     pub selector: Option<Rc<dyn Selector>>,
     pub no_clear_if_empty: bool,
+    pub read0: bool,
 }
 
 impl<'a> Default for SkimOptions<'a> {
@@ -108,6 +109,7 @@ impl<'a> Default for SkimOptions<'a> {
             sync: false,
             selector: None,
             no_clear_if_empty: false,
+            read0: false,
         }
     }
 }
