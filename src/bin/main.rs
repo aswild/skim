@@ -13,7 +13,6 @@ use std::fs::File;
 use std::io::{self, BufRead, BufReader, BufWriter, Read, Write};
 
 use clap::{App, Arg, ArgMatches};
-use tuikit::term::TermHeight;
 
 use skim::prelude::*;
 
@@ -401,9 +400,21 @@ fn real_main() -> Result<i32, std::io::Error> {
 fn parse_options<'a>(options: &'a ArgMatches) -> SkimOptions<'a> {
     SkimOptionsBuilder::default()
         .color(options.values_of("color").and_then(|vals| vals.last()))
-        .min_height(options.values_of("min-height").and_then(|vals| vals.last()))
+        .min_height(
+            options
+                .values_of("min-height")
+                .and_then(|vals| vals.last())
+                .and_then(|s| s.parse().ok())
+                .unwrap_or_default(),
+        )
+        .height(
+            options
+                .values_of("height")
+                .and_then(|vals| vals.last())
+                .and_then(|s| s.parse().ok())
+                .unwrap_or_default(),
+        )
         .no_height(options.is_present("no-height"))
-        .height(options.values_of("height").and_then(|vals| vals.last()))
         .auto_height(options.is_present("auto-height"))
         .margin(options.values_of("margin").and_then(|vals| vals.last()))
         .preview(options.values_of("preview").and_then(|vals| vals.last()))
@@ -576,7 +587,7 @@ fn stdin_autoheight_reader(options: &mut SkimOptions) -> Option<impl BufRead> {
         return None;
     }
 
-    let height = match Skim::parse_height_string(&options.height?) {
+    let height = match options.height {
         TermHeight::Fixed(h) => std::cmp::max(h, 3),
         TermHeight::Percent(p) => {
             let th = get_terminal_height().ok()?;
@@ -598,12 +609,9 @@ fn stdin_autoheight_reader(options: &mut SkimOptions) -> Option<impl BufRead> {
         }
     }
 
-    // ugh, the options struct needs an Option<&'a str> but we need to dynamically generate
-    // it. Hack: just leak it so we get a 'static lifetime
-    let new_height_string = format!("{}", std::cmp::max(lines_read + 2, 3));
-    let new_height_str: &'static str = Box::leak(new_height_string.into_boxed_str());
-    options.height = Some(new_height_str);
-    options.min_height = Some(new_height_str);
+    let new_height = std::cmp::max(lines_read + 2, 3);
+    options.height = TermHeight::Fixed(new_height);
+    options.min_height = TermHeight::Fixed(new_height);
 
     drop(stdin_lock);
     Some(io::Cursor::new(buf).chain(BufReader::new(stdin)))

@@ -1,4 +1,5 @@
 use std::rc::Rc;
+use std::str::FromStr;
 
 use derive_builder::Builder;
 
@@ -31,8 +32,8 @@ pub struct SkimOptions<'a> {
     pub margin: Option<&'a str>,
     pub no_height: bool,
     pub no_clear: bool,
-    pub min_height: Option<&'a str>,
-    pub height: Option<&'a str>,
+    pub min_height: TermHeight,
+    pub height: TermHeight,
     pub auto_height: bool,
     pub preview: Option<&'a str>,
     pub preview_window: Option<&'a str>,
@@ -83,8 +84,8 @@ impl<'a> Default for SkimOptions<'a> {
             margin: Some("0,0,0,0"),
             no_height: false,
             no_clear: false,
-            min_height: Some("10"),
-            height: Some("100%"),
+            min_height: TermHeight::Fixed(10),
+            height: Default::default(),
             auto_height: false,
             preview: None,
             preview_window: Some("right:50%"),
@@ -117,7 +118,7 @@ impl<'a> Default for SkimOptions<'a> {
 impl<'a> SkimOptionsBuilder<'a> {
     pub fn build(&mut self) -> Result<SkimOptions<'a>, String> {
         if let Some(true) = self.no_height {
-            self.height = Some(Some("100%"));
+            self.height = Some(TermHeight::Percent(100));
         }
 
         if let Some(true) = self.reverse {
@@ -125,5 +126,46 @@ impl<'a> SkimOptionsBuilder<'a> {
         }
 
         self.final_build()
+    }
+}
+
+/// Type to represent the terminal height, i.e. the parsed form of the --height and --min-height
+/// options. This is currently a reimplementation of `[tuikit::term::TermHeight]`.
+#[derive(Debug, Clone, Copy)]
+pub enum TermHeight {
+    Fixed(usize),
+    Percent(usize),
+}
+
+impl Default for TermHeight {
+    fn default() -> Self {
+        Self::Percent(100)
+    }
+}
+
+impl FromStr for TermHeight {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.strip_suffix('%') {
+            Some(ps) => {
+                let p = ps.parse::<usize>().map_err(|e| e.to_string())?;
+                if p <= 100 {
+                    Ok(Self::Percent(p))
+                } else {
+                    Err(format!("Percentage {s} is greater than 100%"))
+                }
+            }
+            None => Ok(Self::Fixed(s.parse::<usize>().map_err(|e| e.to_string())?)),
+        }
+    }
+}
+
+impl From<TermHeight> for tuikit::term::TermHeight {
+    fn from(height: TermHeight) -> Self {
+        match height {
+            TermHeight::Fixed(h) => Self::Fixed(h),
+            TermHeight::Percent(h) => Self::Percent(h),
+        }
     }
 }
