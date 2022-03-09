@@ -12,6 +12,7 @@ use std::env;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, BufWriter, Read, Write};
 
+use anyhow::Context;
 use clap::{App, Arg, ArgMatches};
 
 use skim::prelude::*;
@@ -144,16 +145,19 @@ fn main() {
         Ok(exit_code) => std::process::exit(exit_code),
         Err(err) => {
             // if downstream pipe is closed, exit silently, see PR#279
-            if err.kind() == std::io::ErrorKind::BrokenPipe {
-                std::process::exit(0)
+            if let Some(ioerr) = err.downcast_ref::<io::Error>() {
+                if ioerr.kind() == std::io::ErrorKind::BrokenPipe {
+                    std::process::exit(0)
+                }
             }
+            eprintln!("Error: {err:#}");
             std::process::exit(2)
         }
     }
 }
 
 #[rustfmt::skip]
-fn real_main() -> Result<i32, std::io::Error> {
+fn real_main() -> anyhow::Result<i32> {
     let mut stdout = std::io::stdout();
 
     let mut args = Vec::new();
@@ -256,7 +260,7 @@ fn real_main() -> Result<i32, std::io::Error> {
     }
 
     //------------------------------------------------------------------------------
-    let mut options = parse_options(&opts);
+    let mut options = parse_options(&opts)?;
 
     let preview_window_joined = opts.values_of("preview-window").map(|x| x.collect::<Vec<_>>().join(":"));
     options.preview_window = preview_window_joined.as_ref().map(|x| x.as_str());
@@ -337,7 +341,7 @@ fn real_main() -> Result<i32, std::io::Error> {
     //------------------------------------------------------------------------------
     // filter mode
     if opts.is_present("filter") {
-        return filter(&bin_options, &options, rx_item);
+        return filter(&bin_options, &options, rx_item).map_err(Into::into);
     }
 
     //------------------------------------------------------------------------------
@@ -397,21 +401,23 @@ fn real_main() -> Result<i32, std::io::Error> {
     Ok(if output.selected_items.is_empty() { 1 } else { 0 })
 }
 
-fn parse_options<'a>(options: &'a ArgMatches) -> SkimOptions<'a> {
-    SkimOptionsBuilder::default()
+fn parse_options<'a>(options: &'a ArgMatches) -> anyhow::Result<SkimOptions<'a>> {
+    Ok(SkimOptionsBuilder::default()
         .color(options.values_of("color").and_then(|vals| vals.last()))
         .min_height(
             options
                 .values_of("min-height")
                 .and_then(|vals| vals.last())
-                .and_then(|s| s.parse().ok())
+                .map(|s| s.parse().context("can't parse min-height option"))
+                .transpose()?
                 .unwrap_or_default(),
         )
         .height(
             options
                 .values_of("height")
                 .and_then(|vals| vals.last())
-                .and_then(|s| s.parse().ok())
+                .map(|s| s.parse().context("can't parse height option"))
+                .transpose()?
                 .unwrap_or_default(),
         )
         .no_height(options.is_present("no-height"))
@@ -478,8 +484,7 @@ fn parse_options<'a>(options: &'a ArgMatches) -> SkimOptions<'a> {
         .sync(options.is_present("sync"))
         .no_clear_if_empty(options.is_present("no-clear-if-empty"))
         .read0(options.is_present("read0"))
-        .build()
-        .unwrap()
+        .build()?)
 }
 
 fn read_file_lines(filename: &str) -> Result<Vec<String>, std::io::Error> {

@@ -1,7 +1,10 @@
+use std::num::ParseIntError;
 use std::rc::Rc;
 use std::str::FromStr;
 
+use anyhow::anyhow;
 use derive_builder::Builder;
+use thiserror::Error;
 
 use crate::helper::item_reader::SkimItemReader;
 use crate::reader::CommandCollector;
@@ -116,7 +119,7 @@ impl<'a> Default for SkimOptions<'a> {
 }
 
 impl<'a> SkimOptionsBuilder<'a> {
-    pub fn build(&mut self) -> Result<SkimOptions<'a>, String> {
+    pub fn build(&mut self) -> anyhow::Result<SkimOptions<'a>> {
         if let Some(true) = self.no_height {
             self.height = Some(TermHeight::Percent(100));
         }
@@ -125,7 +128,7 @@ impl<'a> SkimOptionsBuilder<'a> {
             self.layout = Some("reverse");
         }
 
-        self.final_build()
+        self.final_build().map_err(|e| anyhow!(e))
     }
 }
 
@@ -144,19 +147,19 @@ impl Default for TermHeight {
 }
 
 impl FromStr for TermHeight {
-    type Err = String;
+    type Err = TermHeightError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.strip_suffix('%') {
             Some(ps) => {
-                let p = ps.parse::<usize>().map_err(|e| e.to_string())?;
+                let p = ps.parse::<usize>()?;
                 if p <= 100 {
                     Ok(Self::Percent(p))
                 } else {
-                    Err(format!("Percentage {s} is greater than 100%"))
+                    Err(TermHeightError::PercentOutOfRange(p))
                 }
             }
-            None => Ok(Self::Fixed(s.parse::<usize>().map_err(|e| e.to_string())?)),
+            None => Ok(Self::Fixed(s.parse::<usize>()?)),
         }
     }
 }
@@ -168,4 +171,12 @@ impl From<TermHeight> for tuikit::term::TermHeight {
             TermHeight::Percent(h) => Self::Percent(h),
         }
     }
+}
+
+#[derive(Debug, Error)]
+pub enum TermHeightError {
+    #[error("Invalid number")]
+    InvalidNumber(#[from] ParseIntError),
+    #[error("Percentage is greater than 100%")]
+    PercentOutOfRange(usize),
 }
