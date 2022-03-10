@@ -19,8 +19,7 @@ pub fn main() {
     let options = SkimOptionsBuilder::default()
         .multi(true)
         .bind(vec!["bs:abort", "Enter:accept"])
-        .build()
-        .unwrap();
+        .build();
 
     Skim::run_with(&options, None).map(|out| match out.final_key {
         // Delete each selected item

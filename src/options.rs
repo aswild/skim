@@ -2,7 +2,6 @@ use std::num::ParseIntError;
 use std::rc::Rc;
 use std::str::FromStr;
 
-use anyhow::anyhow;
 use derive_builder::Builder;
 use thiserror::Error;
 
@@ -119,7 +118,7 @@ impl<'a> Default for SkimOptions<'a> {
 }
 
 impl<'a> SkimOptionsBuilder<'a> {
-    pub fn build(&mut self) -> anyhow::Result<SkimOptions<'a>> {
+    pub fn build(&mut self) -> SkimOptions<'a> {
         if let Some(true) = self.no_height {
             self.height = Some(TermHeight::Percent(100));
         }
@@ -128,7 +127,9 @@ impl<'a> SkimOptionsBuilder<'a> {
             self.layout = Some("reverse");
         }
 
-        self.final_build().map_err(|e| anyhow!(e))
+        // derive_builder could fail if required options aren't set, but this builder has default
+        // values for everything so there's no way it can fail
+        self.final_build().unwrap()
     }
 }
 

@@ -484,7 +484,7 @@ fn parse_options<'a>(options: &'a ArgMatches) -> anyhow::Result<SkimOptions<'a>>
         .sync(options.is_present("sync"))
         .no_clear_if_empty(options.is_present("no-clear-if-empty"))
         .read0(options.is_present("read0"))
-        .build()?)
+        .build())
 }
 
 fn read_file_lines(filename: &str) -> Result<Vec<String>, std::io::Error> {

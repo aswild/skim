@@ -24,8 +24,7 @@ pub fn main() {
         .height(TermHeight::Percent(50))
         .multi(true)
         .preview(Some(""))
-        .build()
-        .unwrap();
+        .build();
 
     let (tx, rx): (SkimItemSender, SkimItemReceiver) = unbounded();
 

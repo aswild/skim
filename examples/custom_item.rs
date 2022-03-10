@@ -24,8 +24,7 @@ pub fn main() {
         .height(TermHeight::Percent(50))
         .multi(true)
         .preview(Some("")) // preview should be specified to enable preview window
-        .build()
-        .unwrap();
+        .build();
 
     let (tx_item, rx_item): (SkimItemSender, SkimItemReceiver) = unbounded();
     let _ = tx_item.send(Arc::new(MyItem {

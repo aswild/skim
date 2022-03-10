@@ -6,8 +6,7 @@ pub fn main() {
     let options = SkimOptionsBuilder::default()
         .height(TermHeight::Percent(50))
         .multi(true)
-        .build()
-        .unwrap();
+        .build();
     let item_reader = SkimItemReader::default();
 
     //==================================================

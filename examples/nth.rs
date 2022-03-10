@@ -8,7 +8,7 @@ use std::io::Cursor;
 pub fn main() {
     let input = "foo 123";
 
-    let options = SkimOptionsBuilder::default().query(Some("f")).build().unwrap();
+    let options = SkimOptionsBuilder::default().query(Some("f")).build();
     let item_reader = SkimItemReader::new(SkimItemReaderOption::default().nth("2").build());
 
     let items = item_reader.of_bufread(Cursor::new(input));
