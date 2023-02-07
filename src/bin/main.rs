@@ -13,11 +13,11 @@ use std::fs::File;
 use std::io::{self, BufRead, BufReader, BufWriter, Read, Write};
 
 use anyhow::Context;
-use clap::{crate_version, Arg, ArgAction, ArgMatches, Command};
+use clap::{Arg, ArgAction, ArgMatches};
 
 use skim::prelude::*;
 
-const USAGE: &str = "
+const _USAGE: &str = "
 Usage: sk [options]
 
   Options
@@ -172,30 +172,44 @@ fn real_main() -> anyhow::Result<i32> {
 
     //------------------------------------------------------------------------------
     // parse options
-    let opts = Command::new("sk")
-        .author("Jinzhou Zhang<lotabout@gmail.com>")
-        .version(crate_version!())
+    let opts = clap::command!()
         .args_override_self(true)
-        .disable_help_flag(true)
-        .arg(Arg::new("help").long("help").short('h').action(ArgAction::SetTrue))
+        .next_help_heading("Search")
+        .arg(Arg::new("tac").long("tac").action(ArgAction::SetTrue).help("Reverse the order of search results"))
+        .arg(Arg::new("no-sort").long("no-sort").action(ArgAction::SetTrue).help("Do not sort the results"))
+        .arg(
+            Arg::new("tiebreak")
+                .long("tiebreak")
+                .short('t')
+                .help("Tie break criteria")
+                .value_name("criteria")
+                .long_help(
+                    "Tie breaker strategy, multiple options can be comma-separated. \
+                    Valid values include: 'score', 'begin', 'end', 'length', and each of these may \
+                    be prefixed by a '-' to negate the metric."
+                )
+        )
+        .arg(Arg::new("nth").long("nth").short('n').help("specify the fields to be matched"))
+        .arg(Arg::new("with-nth").long("with-nth").help("specify the fields to be transformed"))
+        .arg(Arg::new("delimiter").long("delimiter").short('d').help("specify the field delimeter (in regex)"))
+        .arg(Arg::new("exact").long("exact").short('e').action(ArgAction::SetTrue).help("start skim in exact mode"))
+        .arg(Arg::new("regex").long("regex").action(ArgAction::SetTrue).help("use regex instead of fuzzy match"))
+        .arg(Arg::new("algorithm").long("algo").default_value("skim_v2").help("fuzzy matching algorithm: [skim_v1, skim_v2, clangd])"))
+        .arg(Arg::new("case").long("case").default_value("smart").help("case sensitivity: [respect, ignore, smart]"))
+
+        .next_help_heading("Interface")
+
         .arg(Arg::new("bind").long("bind").short('b').action(ArgAction::Append))
         .arg(Arg::new("multi").long("multi").short('m').action(ArgAction::SetTrue).overrides_with("no-multi"))
         .arg(Arg::new("no-multi").long("no-multi").action(ArgAction::SetTrue).overrides_with("multi"))
         .arg(Arg::new("prompt").long("prompt").short('p').default_value("> "))
         .arg(Arg::new("cmd-prompt").long("cmd-prompt").default_value("c> "))
         .arg(Arg::new("expect").long("expect").action(ArgAction::Append).value_name("KEYS"))
-        .arg(Arg::new("tac").long("tac").action(ArgAction::SetTrue))
-        .arg(Arg::new("tiebreak").long("tiebreak").short('t'))
         .arg(Arg::new("ansi").long("ansi").action(ArgAction::SetTrue))
-        .arg(Arg::new("exact").long("exact").short('e').action(ArgAction::SetTrue))
         .arg(Arg::new("cmd").long("cmd").short('c'))
         .arg(Arg::new("interactive").long("interactive").short('i').action(ArgAction::SetTrue))
         .arg(Arg::new("query").long("query").short('q'))
         .arg(Arg::new("cmd-query").long("cmd-query"))
-        .arg(Arg::new("regex").long("regex").action(ArgAction::SetTrue))
-        .arg(Arg::new("delimiter").long("delimiter").short('d'))
-        .arg(Arg::new("nth").long("nth").short('n'))
-        .arg(Arg::new("with-nth").long("with-nth"))
         .arg(Arg::new("replstr").short('I'))
         .arg(Arg::new("color").long("color"))
         .arg(Arg::new("margin").long("margin").default_value("0,0,0,0"))
@@ -208,8 +222,6 @@ fn real_main() -> anyhow::Result<i32> {
         .arg(Arg::new("preview").long("preview"))
         .arg(Arg::new("preview-window").long("preview-window").default_value("right:50%"))
         .arg(Arg::new("reverse").long("reverse").action(ArgAction::SetTrue))
-        .arg(Arg::new("algorithm").long("algo").default_value("skim_v2"))
-        .arg(Arg::new("case").long("case").default_value("smart"))
         .arg(Arg::new("literal").long("literal").action(ArgAction::SetTrue))
         .arg(Arg::new("cycle").long("cycle").action(ArgAction::SetTrue))
         .arg(Arg::new("no-hscroll").long("no-hscroll").action(ArgAction::SetTrue))
@@ -233,7 +245,6 @@ fn real_main() -> anyhow::Result<i32> {
         .arg(Arg::new("print0").long("print0").action(ArgAction::SetTrue))
         .arg(Arg::new("sync").long("sync").action(ArgAction::SetTrue))
         .arg(Arg::new("extended").long("extended").short('x').action(ArgAction::SetTrue))
-        .arg(Arg::new("no-sort").long("no-sort").action(ArgAction::SetTrue))
         .arg(Arg::new("select-1").long("select-1").short('1').action(ArgAction::SetTrue))
         .arg(Arg::new("exit-0").long("exit-0").short('0').action(ArgAction::SetTrue))
         .arg(Arg::new("filter").long("filter").short('f'))
@@ -247,12 +258,6 @@ fn real_main() -> anyhow::Result<i32> {
         .arg(Arg::new("no-clear-if-empty").long("no-clear-if-empty").action(ArgAction::SetTrue))
         .arg(Arg::new("show-cmd-error").long("show-cmd-error").action(ArgAction::SetTrue))
         .get_matches_from(args);
-
-    // TODO remove this
-    if opts.get_flag("help") {
-        write!(stdout, "{USAGE}")?;
-        return Ok(0);
-    }
 
     //------------------------------------------------------------------------------
     let mut options = parse_options(&opts)?;
