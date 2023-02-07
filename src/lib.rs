@@ -303,8 +303,6 @@ impl Skim {
                     .min_height(options.min_height.into())
                     .height(options.height.into())
                     .clear_on_exit(!options.no_clear)
-                    .disable_alternate_screen(options.no_clear_start)
-                    .clear_on_start(!options.no_clear_start)
                     .hold(options.select1 || options.exit0 || options.sync),
             )
             .unwrap(),

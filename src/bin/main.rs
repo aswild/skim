@@ -54,7 +54,6 @@ Usage: sk [options]
     --keep-right         Keep the right end of the line visible on overflow
     --skip-to-pattern    Line starts with the start of matched pattern
     --no-clear-if-empty  Do not clear previous items if command returns empty result
-    --no-clear-start     Do not clear on start
     --show-cmd-error     Send command error message if command fails
 
   Layout
@@ -95,7 +94,6 @@ Usage: sk [options]
     --expect KEYS        comma seperated keys that can be used to complete skim
     --read0              Read input delimited by ASCII NUL(\\0) characters
     --print0             Print output delimited by ASCII NUL(\\0) characters
-    --no-clear-start     Do not clear screen on start
     --no-clear           Do not clear screen on exit
     --print-query        Print query as the first line
     --print-cmd          Print command query as the first line (after --print-query)
@@ -206,7 +204,6 @@ fn real_main() -> anyhow::Result<i32> {
         .arg(Arg::new("no-height").long("no-height").action(ArgAction::SetTrue))
         .arg(Arg::new("auto-height").long("auto-height").action(ArgAction::SetTrue))
         .arg(Arg::new("no-clear").long("no-clear").action(ArgAction::SetTrue))
-        .arg(Arg::new("no-clear-start").long("no-clear-start").action(ArgAction::SetTrue))
         .arg(Arg::new("no-mouse").long("no-mouse").action(ArgAction::SetTrue))
         .arg(Arg::new("preview").long("preview"))
         .arg(Arg::new("preview-window").long("preview-window").default_value("right:50%"))
@@ -446,7 +443,6 @@ fn parse_options(options: &ArgMatches) -> anyhow::Result<SkimOptions<'_>> {
         .no_hscroll(options.get_flag("no-hscroll"))
         .no_mouse(options.get_flag("no-mouse"))
         .no_clear(options.get_flag("no-clear"))
-        .no_clear_start(options.get_flag("no-clear-start"))
         .tabstop(options.get_one("tabstop").map(String::as_str))
         .tiebreak(options.get_one("tiebreak").cloned())
         .tac(options.get_flag("tac"))
