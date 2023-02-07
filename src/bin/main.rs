@@ -250,7 +250,7 @@ fn real_main() -> anyhow::Result<i32> {
 
     // TODO remove this
     if opts.get_flag("help") {
-        write!(stdout, "{}", USAGE)?;
+        write!(stdout, "{USAGE}")?;
         return Ok(0);
     }
 
@@ -319,7 +319,7 @@ fn real_main() -> anyhow::Result<i32> {
 
     //------------------------------------------------------------------------------
     // read from pipe or command
-    let rx_item: Option<SkimItemReceiver> = (|| {
+    let rx_item: Option<SkimItemReceiver> =
         if atty::isnt(atty::Stream::Stdin) {
             Some(match stdin_autoheight_reader(&mut options) {
                 Some(reader) => cmd_collector.borrow().of_bufread(reader),
@@ -327,8 +327,7 @@ fn real_main() -> anyhow::Result<i32> {
             })
         } else {
             None
-        }
-    })();
+        };
 
     let options = options;
 

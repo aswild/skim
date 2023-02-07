@@ -39,7 +39,7 @@ impl Input {
 
     pub fn bind(&mut self, key: &str, action_chain: ActionChain) {
         let key = from_keyname(key);
-        if key == None || action_chain.is_empty() {
+        if key.is_none() || action_chain.is_empty() {
             return;
         }
 
@@ -122,7 +122,7 @@ pub fn parse_key_action(key_action: &str) -> Vec<KeyActions> {
 /// e.g. execute(...) => Some(Event::EvActExecute, Box::new(Option("...")))
 pub fn parse_action_arg(action_arg: &str) -> Option<Event> {
     // construct a fake key_action: `fake_key:action(arg)`
-    let fake_key_action = format!("fake_key:{}", action_arg);
+    let fake_key_action = format!("fake_key:{action_arg}");
     // get keys: [(key, [(action, arg), (action, arg)]), ...]
     let keys = parse_key_action(&fake_key_action);
     // only get the first key(since it is faked), and get the first action
@@ -199,7 +199,7 @@ mod test {
         {}
         FZF-EOF";
 
-        let key_action_str = format!("ctrl-s:toggle-sort,ctrl-m:execute:{},ctrl-t:toggle", cmd);
+        let key_action_str = format!("ctrl-s:toggle-sort,ctrl-m:execute:{cmd},ctrl-t:toggle");
 
         let key_action = parse_key_action(&key_action_str);
         assert_eq!(("ctrl-s", vec![("toggle-sort", None)]), key_action[0]);

@@ -5,11 +5,11 @@ use skim::prelude::*;
 // This example only produce friendly print statements!
 
 fn fake_delete_item(item: &str) {
-    println!("Deleting item `{}`...", item);
+    println!("Deleting item `{item}`...");
 }
 
 fn fake_create_item(item: &str) {
-    println!("Creating a new item `{}`...", item);
+    println!("Creating a new item `{item}`...");
 }
 
 pub fn main() {
@@ -21,11 +21,13 @@ pub fn main() {
         .bind(vec!["bs:abort", "Enter:accept"])
         .build();
 
-    Skim::run_with(&options, None).map(|out| match out.final_key {
-        // Delete each selected item
-        Key::Backspace => out.selected_items.iter().for_each(|i| fake_delete_item(&i.text())),
-        // Create a new item based on the query
-        Key::Enter => fake_create_item(out.query.as_ref()),
-        _ => (),
-    });
+    if let Some(out) = Skim::run_with(&options, None) {
+        match out.final_key {
+            // Delete each selected item
+            Key::Backspace => out.selected_items.iter().for_each(|i| fake_delete_item(&i.text())),
+            // Create a new item based on the query
+            Key::Enter => fake_create_item(out.query.as_ref()),
+            _ => (),
+        }
+    }
 }

@@ -362,7 +362,7 @@ pub fn inject_command<'a>(cmd: &'a str, context: InjectContext<'a>) -> Cow<'a, s
                 .zip(indices.iter())
                 .map(|(&s, &i)| {
                     let rest = &range[1..];
-                    let index_str = format!("{}", i);
+                    let index_str = format!("{i}");
                     let replacement = match rest {
                         "" => s,
                         "n" => &index_str,

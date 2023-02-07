@@ -70,9 +70,8 @@ impl FuzzyEngineBuilder {
 
     #[allow(deprecated)]
     pub fn build(self) -> FuzzyEngine {
-        use fuzzy_matcher::skim::SkimMatcher;
         let matcher: Box<dyn FuzzyMatcher> = match self.algorithm {
-            FuzzyAlgorithm::SkimV1 => Box::new(SkimMatcher::default()),
+            FuzzyAlgorithm::SkimV1 => Box::<fuzzy_matcher::skim::SkimMatcher>::default(),
             FuzzyAlgorithm::SkimV2 => {
                 let matcher = SkimMatcherV2::default().element_limit(BYTES_1M);
                 let matcher = match self.case {
@@ -146,11 +145,7 @@ impl MatchEngine for FuzzyEngine {
             }
         }
 
-        if matched_result == None {
-            return None;
-        }
-
-        let (score, matched_range) = matched_result.unwrap();
+        let (score, matched_range) = matched_result?;
 
         let begin = *matched_range.first().unwrap_or(&0);
         let end = *matched_range.last().unwrap_or(&0);
