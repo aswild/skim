@@ -12,7 +12,7 @@ use std::env;
 use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, Write};
 
-use clap::{crate_version, App, Arg, ArgMatches};
+use clap::{crate_version, Command, Arg, ArgAction, ArgMatches};
 use skim::prelude::*;
 
 const USAGE: &str = "
@@ -167,82 +167,83 @@ fn real_main() -> Result<i32, std::io::Error> {
 
     //------------------------------------------------------------------------------
     // parse options
-    let opts = App::new("sk")
+    let opts = Command::new("sk")
         .author("Jinzhou Zhang<lotabout@gmail.com>")
         .version(crate_version!())
-        .arg(Arg::with_name("help").long("help").short('h'))
-        .arg(Arg::with_name("bind").long("bind").short('b').multiple(true).takes_value(true))
-        .arg(Arg::with_name("multi").long("multi").short('m').multiple(true))
-        .arg(Arg::with_name("no-multi").long("no-multi").multiple(true))
-        .arg(Arg::with_name("prompt").long("prompt").short('p').multiple(true).takes_value(true).default_value("> "))
-        .arg(Arg::with_name("cmd-prompt").long("cmd-prompt").multiple(true).takes_value(true).default_value("c> "))
-        .arg(Arg::with_name("expect").long("expect").multiple(true).takes_value(true))
-        .arg(Arg::with_name("tac").long("tac").multiple(true))
-        .arg(Arg::with_name("tiebreak").long("tiebreak").short('t').multiple(true).takes_value(true))
-        .arg(Arg::with_name("ansi").long("ansi").multiple(true))
-        .arg(Arg::with_name("exact").long("exact").short('e').multiple(true))
-        .arg(Arg::with_name("cmd").long("cmd").short('c').multiple(true).takes_value(true))
-        .arg(Arg::with_name("interactive").long("interactive").short('i').multiple(true))
-        .arg(Arg::with_name("query").long("query").short('q').multiple(true).takes_value(true))
-        .arg(Arg::with_name("cmd-query").long("cmd-query").multiple(true).takes_value(true))
-        .arg(Arg::with_name("regex").long("regex").multiple(true))
-        .arg(Arg::with_name("delimiter").long("delimiter").short('d').multiple(true).takes_value(true))
-        .arg(Arg::with_name("nth").long("nth").short('n').multiple(true).takes_value(true))
-        .arg(Arg::with_name("with-nth").long("with-nth").multiple(true).takes_value(true))
-        .arg(Arg::with_name("replstr").short('I').multiple(true).takes_value(true))
-        .arg(Arg::with_name("color").long("color").multiple(true).takes_value(true))
-        .arg(Arg::with_name("margin").long("margin").multiple(true).takes_value(true).default_value("0,0,0,0"))
-        .arg(Arg::with_name("min-height").long("min-height").multiple(true).takes_value(true).default_value("10"))
-        .arg(Arg::with_name("height").long("height").multiple(true).takes_value(true).default_value("100%"))
-        .arg(Arg::with_name("no-height").long("no-height").multiple(true))
-        .arg(Arg::with_name("no-clear").long("no-clear").multiple(true))
-        .arg(Arg::with_name("no-clear-start").long("no-clear-start").multiple(true))
-        .arg(Arg::with_name("no-mouse").long("no-mouse").multiple(true))
-        .arg(Arg::with_name("preview").long("preview").multiple(true).takes_value(true))
-        .arg(Arg::with_name("preview-window").long("preview-window").multiple(true).takes_value(true).default_value("right:50%"))
-        .arg(Arg::with_name("reverse").long("reverse").multiple(true))
-
-        .arg(Arg::with_name("algorithm").long("algo").multiple(true).takes_value(true).default_value("skim_v2"))
-        .arg(Arg::with_name("case").long("case").multiple(true).takes_value(true).default_value("smart"))
-        .arg(Arg::with_name("literal").long("literal").multiple(true))
-        .arg(Arg::with_name("cycle").long("cycle").multiple(true))
-        .arg(Arg::with_name("no-hscroll").long("no-hscroll").multiple(true))
-        .arg(Arg::with_name("hscroll-off").long("hscroll-off").multiple(true).takes_value(true).default_value("10"))
-        .arg(Arg::with_name("filepath-word").long("filepath-word").multiple(true))
-        .arg(Arg::with_name("jump-labels").long("jump-labels").multiple(true).takes_value(true).default_value("abcdefghijklmnopqrstuvwxyz"))
-        .arg(Arg::with_name("border").long("border").multiple(true))
-        .arg(Arg::with_name("inline-info").long("inline-info").multiple(true))
-        .arg(Arg::with_name("header").long("header").multiple(true).takes_value(true).default_value(""))
-        .arg(Arg::with_name("header-lines").long("header-lines").multiple(true).takes_value(true).default_value("0"))
-        .arg(Arg::with_name("tabstop").long("tabstop").multiple(true).takes_value(true).default_value("8"))
-        .arg(Arg::with_name("no-bold").long("no-bold").multiple(true))
-        .arg(Arg::with_name("history").long("history").multiple(true).takes_value(true))
-        .arg(Arg::with_name("cmd-history").long("cmd-history").multiple(true).takes_value(true))
-        .arg(Arg::with_name("history-size").long("history-size").multiple(true).takes_value(true).default_value("1000"))
-        .arg(Arg::with_name("cmd-history-size").long("cmd-history-size").multiple(true).takes_value(true).default_value("1000"))
-        .arg(Arg::with_name("print-query").long("print-query").multiple(true))
-        .arg(Arg::with_name("print-cmd").long("print-cmd").multiple(true))
-        .arg(Arg::with_name("print-score").long("print-score").multiple(true))
-        .arg(Arg::with_name("read0").long("read0").multiple(true))
-        .arg(Arg::with_name("print0").long("print0").multiple(true))
-        .arg(Arg::with_name("sync").long("sync").multiple(true))
-        .arg(Arg::with_name("extended").long("extended").short('x').multiple(true))
-        .arg(Arg::with_name("no-sort").long("no-sort").multiple(true))
-        .arg(Arg::with_name("select-1").long("select-1").short('1').multiple(true))
-        .arg(Arg::with_name("exit-0").long("exit-0").short('0').multiple(true))
-        .arg(Arg::with_name("filter").long("filter").short('f').takes_value(true).multiple(true))
-        .arg(Arg::with_name("layout").long("layout").multiple(true).takes_value(true).default_value("default"))
-        .arg(Arg::with_name("keep-right").long("keep-right").multiple(true))
-        .arg(Arg::with_name("skip-to-pattern").long("skip-to-pattern").multiple(true).takes_value(true).default_value(""))
-        .arg(Arg::with_name("pre-select-n").long("pre-select-n").multiple(true).takes_value(true).default_value("0"))
-        .arg(Arg::with_name("pre-select-pat").long("pre-select-pat").multiple(true).takes_value(true).default_value(""))
-        .arg(Arg::with_name("pre-select-items").long("pre-select-items").multiple(true).takes_value(true))
-        .arg(Arg::with_name("pre-select-file").long("pre-select-file").multiple(true).takes_value(true).default_value(""))
-        .arg(Arg::with_name("no-clear-if-empty").long("no-clear-if-empty").multiple(true))
-        .arg(Arg::with_name("show-cmd-error").long("show-cmd-error").multiple(true))
+        .args_override_self(true) // deprecated in 3.x, but not-deprecated in 4.x, leave it in
+        .arg(Arg::new("help").long("help").short('h').action(ArgAction::SetTrue))
+        .arg(Arg::new("bind").long("bind").short('b').action(ArgAction::Append))
+        .arg(Arg::new("multi").long("multi").short('m').action(ArgAction::SetTrue).overrides_with("no-multi"))
+        .arg(Arg::new("no-multi").long("no-multi").action(ArgAction::SetTrue).overrides_with("multi"))
+        .arg(Arg::new("prompt").long("prompt").short('p').takes_value(true).default_value("> "))
+        .arg(Arg::new("cmd-prompt").long("cmd-prompt").takes_value(true).default_value("c> "))
+        .arg(Arg::new("expect").long("expect").action(ArgAction::Append).value_name("KEYS"))
+        .arg(Arg::new("tac").long("tac").action(ArgAction::SetTrue))
+        .arg(Arg::new("tiebreak").long("tiebreak").short('t').takes_value(true))
+        .arg(Arg::new("ansi").long("ansi").action(ArgAction::SetTrue))
+        .arg(Arg::new("exact").long("exact").short('e').action(ArgAction::SetTrue))
+        .arg(Arg::new("cmd").long("cmd").short('c').takes_value(true))
+        .arg(Arg::new("interactive").long("interactive").short('i').action(ArgAction::SetTrue))
+        .arg(Arg::new("query").long("query").short('q').takes_value(true))
+        .arg(Arg::new("cmd-query").long("cmd-query").takes_value(true))
+        .arg(Arg::new("regex").long("regex").action(ArgAction::SetTrue))
+        .arg(Arg::new("delimiter").long("delimiter").short('d').takes_value(true))
+        .arg(Arg::new("nth").long("nth").short('n').takes_value(true))
+        .arg(Arg::new("with-nth").long("with-nth").takes_value(true))
+        .arg(Arg::new("replstr").short('I').takes_value(true))
+        .arg(Arg::new("color").long("color").takes_value(true))
+        .arg(Arg::new("margin").long("margin").takes_value(true).default_value("0,0,0,0"))
+        .arg(Arg::new("min-height").long("min-height").takes_value(true).default_value("10"))
+        .arg(Arg::new("height").long("height").takes_value(true).default_value("100%"))
+        .arg(Arg::new("no-height").long("no-height").action(ArgAction::SetTrue))
+        .arg(Arg::new("no-clear").long("no-clear").action(ArgAction::SetTrue))
+        .arg(Arg::new("no-clear-start").long("no-clear-start").action(ArgAction::SetTrue))
+        .arg(Arg::new("no-mouse").long("no-mouse").action(ArgAction::SetTrue))
+        .arg(Arg::new("preview").long("preview").takes_value(true))
+        .arg(Arg::new("preview-window").long("preview-window").takes_value(true).default_value("right:50%"))
+        .arg(Arg::new("reverse").long("reverse").action(ArgAction::SetTrue))
+        .arg(Arg::new("algorithm").long("algo").takes_value(true).default_value("skim_v2"))
+        .arg(Arg::new("case").long("case").takes_value(true).default_value("smart"))
+        .arg(Arg::new("literal").long("literal").action(ArgAction::SetTrue))
+        .arg(Arg::new("cycle").long("cycle").action(ArgAction::SetTrue))
+        .arg(Arg::new("no-hscroll").long("no-hscroll").action(ArgAction::SetTrue))
+        .arg(Arg::new("hscroll-off").long("hscroll-off").takes_value(true).default_value("10"))
+        .arg(Arg::new("filepath-word").long("filepath-word").action(ArgAction::SetTrue))
+        .arg(Arg::new("jump-labels").long("jump-labels").takes_value(true).default_value("abcdefghijklmnopqrstuvwxyz"))
+        .arg(Arg::new("border").long("border").action(ArgAction::SetTrue))
+        .arg(Arg::new("inline-info").long("inline-info").action(ArgAction::SetTrue))
+        .arg(Arg::new("header").long("header").takes_value(true).default_value(""))
+        .arg(Arg::new("header-lines").long("header-lines").takes_value(true).value_parser(clap::value_parser!(usize)).default_value("0"))
+        .arg(Arg::new("tabstop").long("tabstop").takes_value(true).default_value("8"))
+        .arg(Arg::new("no-bold").long("no-bold").action(ArgAction::SetTrue))
+        .arg(Arg::new("history").long("history").takes_value(true))
+        .arg(Arg::new("cmd-history").long("cmd-history").takes_value(true))
+        .arg(Arg::new("history-size").long("history-size").takes_value(true).default_value("1000"))
+        .arg(Arg::new("cmd-history-size").long("cmd-history-size").takes_value(true).default_value("1000"))
+        .arg(Arg::new("print-query").long("print-query").action(ArgAction::SetTrue))
+        .arg(Arg::new("print-cmd").long("print-cmd").action(ArgAction::SetTrue))
+        .arg(Arg::new("print-score").long("print-score").action(ArgAction::SetTrue))
+        .arg(Arg::new("read0").long("read0").action(ArgAction::SetTrue))
+        .arg(Arg::new("print0").long("print0").action(ArgAction::SetTrue))
+        .arg(Arg::new("sync").long("sync").action(ArgAction::SetTrue))
+        .arg(Arg::new("extended").long("extended").short('x').action(ArgAction::SetTrue))
+        .arg(Arg::new("no-sort").long("no-sort").action(ArgAction::SetTrue))
+        .arg(Arg::new("select-1").long("select-1").short('1').action(ArgAction::SetTrue))
+        .arg(Arg::new("exit-0").long("exit-0").short('0').action(ArgAction::SetTrue))
+        .arg(Arg::new("filter").long("filter").short('f').takes_value(true))
+        .arg(Arg::new("layout").long("layout").takes_value(true).default_value("default"))
+        .arg(Arg::new("keep-right").long("keep-right").action(ArgAction::SetTrue))
+        .arg(Arg::new("skip-to-pattern").long("skip-to-pattern").takes_value(true).default_value(""))
+        .arg(Arg::new("pre-select-n").long("pre-select-n").takes_value(true).value_parser(clap::value_parser!(usize)).default_value("0"))
+        .arg(Arg::new("pre-select-pat").long("pre-select-pat").takes_value(true).default_value(""))
+        .arg(Arg::new("pre-select-items").long("pre-select-items").takes_value(true))
+        .arg(Arg::new("pre-select-file").long("pre-select-file").takes_value(true).default_value(""))
+        .arg(Arg::new("no-clear-if-empty").long("no-clear-if-empty").action(ArgAction::SetTrue))
+        .arg(Arg::new("show-cmd-error").long("show-cmd-error").action(ArgAction::SetTrue))
         .get_matches_from(args);
 
-    if opts.is_present("help") {
+    // TODO remove this
+    if opts.get_flag("help") {
         write!(stdout, "{}", USAGE)?;
         return Ok(0);
     }
@@ -250,18 +251,18 @@ fn real_main() -> Result<i32, std::io::Error> {
     //------------------------------------------------------------------------------
     let mut options = parse_options(&opts);
 
-    let preview_window_joined = opts.values_of("preview-window").map(|x| x.collect::<Vec<_>>().join(":"));
-    options.preview_window = preview_window_joined.as_deref();
+    // WILD NOTE: this used to be a multiple option where args were concatenated with ':'
+    options.preview_window = opts.get_one("preview-window").map(String::as_str);
 
     //------------------------------------------------------------------------------
     // initialize collector
     let item_reader_option = SkimItemReaderOption::default()
-        .ansi(opts.is_present("ansi"))
-        .delimiter(opts.values_of("delimiter").and_then(|vals| vals.last()).unwrap_or(""))
-        .with_nth(opts.values_of("with-nth").and_then(|vals| vals.last()).unwrap_or(""))
-        .nth(opts.values_of("nth").and_then(|vals| vals.last()).unwrap_or(""))
-        .read0(opts.is_present("read0"))
-        .show_error(opts.is_present("show-cmd-error"))
+        .ansi(opts.get_flag("ansi"))
+        .delimiter(opts.get_one("delimiter").map(String::as_str).unwrap_or(""))
+        .with_nth(opts.get_one("with-nth").map(String::as_str).unwrap_or(""))
+        .nth(opts.get_one("nth").map(String::as_str).unwrap_or(""))
+        .read0(opts.get_flag("read0"))
+        .show_error(opts.get_flag("show-cmd-error"))
         .build();
 
     let cmd_collector = Rc::new(RefCell::new(SkimItemReader::new(item_reader_option)));
@@ -269,8 +270,8 @@ fn real_main() -> Result<i32, std::io::Error> {
 
     //------------------------------------------------------------------------------
     // read in the history file
-    let fz_query_histories = opts.values_of("history").and_then(|vals| vals.last());
-    let cmd_query_histories = opts.values_of("cmd-history").and_then(|vals| vals.last());
+    let fz_query_histories = opts.get_one("history").map(String::as_str);
+    let cmd_query_histories = opts.get_one("cmd-history").map(String::as_str);
     let query_history = fz_query_histories.and_then(|filename| read_file_lines(filename).ok()).unwrap_or_default();
     let cmd_history = cmd_query_histories.and_then(|filename| read_file_lines(filename).ok()).unwrap_or_default();
 
@@ -283,10 +284,10 @@ fn real_main() -> Result<i32, std::io::Error> {
 
     //------------------------------------------------------------------------------
     // handle pre-selection options
-    let pre_select_n: Option<usize> = opts.values_of("pre-select-n").and_then(|vals| vals.last()).and_then(|s| s.parse().ok());
-    let pre_select_pat = opts.values_of("pre-select-pat").and_then(|vals| vals.last());
-    let pre_select_items: Option<Vec<String>> = opts.values_of("pre-select-items").map(|vals| vals.flat_map(|m|m.split('\n')).map(|s|s.to_string()).collect());
-    let pre_select_file = opts.values_of("pre-select-file").and_then(|vals| vals.last());
+    let pre_select_n: Option<usize> = opts.get_one("pre-select-n").copied();
+    let pre_select_pat = opts.get_one("pre-select-pat").map(String::as_str);
+    let pre_select_items: Option<Vec<String>> = opts.get_one::<String>("pre-select-items").map(|s| s.split('\n').map(String::from).collect());
+    let pre_select_file = opts.get_one("pre-select-file").map(String::as_str);
 
     if pre_select_n.is_some() || pre_select_pat.is_some() || pre_select_items.is_some() || pre_select_file.is_some() {
         let first_n = pre_select_n.unwrap_or(0);
@@ -306,10 +307,10 @@ fn real_main() -> Result<i32, std::io::Error> {
 
     //------------------------------------------------------------------------------
     let bin_options = BinOptionsBuilder::default()
-        .filter(opts.values_of("filter").and_then(|vals| vals.last()))
-        .print_query(opts.is_present("print-query"))
-        .print_cmd(opts.is_present("print-cmd"))
-        .output_ending(if opts.is_present("print0") { "\0" } else { "\n" })
+        .filter(opts.get_one("filter").map(String::as_str))
+        .print_query(opts.get_flag("print-query"))
+        .print_cmd(opts.get_flag("print-cmd"))
+        .output_ending(if opts.get_flag("print0") { "\0" } else { "\n" })
         .build()
         .expect("");
 
@@ -324,7 +325,7 @@ fn real_main() -> Result<i32, std::io::Error> {
 
     //------------------------------------------------------------------------------
     // filter mode
-    if opts.is_present("filter") {
+    if opts.contains_id("filter") {
         return filter(&bin_options, &options, rx_item);
     }
 
@@ -350,7 +351,7 @@ fn real_main() -> Result<i32, std::io::Error> {
         write!(stdout, "{}{}", output.cmd, bin_options.output_ending)?;
     }
 
-    if opts.is_present("expect") {
+    if opts.contains_id("expect") {
         match output.final_event {
             Event::EvActAccept(Some(accept_key)) => {
                 write!(stdout, "{}{}", accept_key, bin_options.output_ending)?;
@@ -369,14 +370,14 @@ fn real_main() -> Result<i32, std::io::Error> {
     //------------------------------------------------------------------------------
     // write the history with latest item
     if let Some(file) = fz_query_histories {
-        let limit = opts.values_of("history-size").and_then(|vals| vals.last())
+        let limit = opts.get_one("history-size").map(String::as_str)
             .and_then(|size| size.parse::<usize>().ok())
             .unwrap_or(DEFAULT_HISTORY_SIZE);
         write_history_to_file(&query_history, &output.query, limit, file)?;
     }
 
     if let Some(file) = cmd_query_histories {
-        let limit = opts.values_of("cmd-history-size").and_then(|vals| vals.last())
+        let limit = opts.get_one("cmd-history-size").map(String::as_str)
             .and_then(|size| size.parse::<usize>().ok())
             .unwrap_or(DEFAULT_HISTORY_SIZE);
         write_history_to_file(&cmd_history, &output.cmd, limit, file)?;
@@ -387,72 +388,75 @@ fn real_main() -> Result<i32, std::io::Error> {
 
 fn parse_options(options: &ArgMatches) -> SkimOptions<'_> {
     SkimOptionsBuilder::default()
-        .color(options.values_of("color").and_then(|vals| vals.last()))
-        .min_height(options.values_of("min-height").and_then(|vals| vals.last()))
-        .no_height(options.is_present("no-height"))
-        .height(options.values_of("height").and_then(|vals| vals.last()))
-        .margin(options.values_of("margin").and_then(|vals| vals.last()))
-        .preview(options.values_of("preview").and_then(|vals| vals.last()))
-        .cmd(options.values_of("cmd").and_then(|vals| vals.last()))
-        .query(options.values_of("query").and_then(|vals| vals.last()))
-        .cmd_query(options.values_of("cmd-query").and_then(|vals| vals.last()))
-        .interactive(options.is_present("interactive"))
-        .prompt(options.values_of("prompt").and_then(|vals| vals.last()))
-        .cmd_prompt(options.values_of("cmd-prompt").and_then(|vals| vals.last()))
+        .color(options.get_one("color").map(String::as_str))
+        .min_height(options.get_one("min-height").map(String::as_str))
+        .no_height(options.get_flag("no-height"))
+        .height(options.get_one("height").map(String::as_str))
+        .margin(options.get_one("margin").map(String::as_str))
+        .preview(options.get_one("preview").map(String::as_str))
+        .cmd(options.get_one("cmd").map(String::as_str))
+        .query(options.get_one("query").map(String::as_str))
+        .cmd_query(options.get_one("cmd-query").map(String::as_str))
+        .interactive(options.get_flag("interactive"))
+        .prompt(options.get_one("prompt").map(String::as_str))
+        .cmd_prompt(options.get_one("cmd-prompt").map(String::as_str))
         .bind(
             options
-                .values_of("bind")
-                .map(|x| x.collect::<Vec<_>>())
+                .get_many("bind")
+                .map(|values| values.map(String::as_str).collect::<Vec<_>>())
                 .unwrap_or_default(),
         )
-        .expect(options.values_of("expect").map(|x| x.collect::<Vec<_>>().join(",")))
-        .multi(if options.is_present("no-multi") {
+        .expect(
+            options
+                .get_many("expect")
+                .map(|values| {
+                    values
+                        .map(String::as_str)
+                        .collect::<Vec<_>>()
+                        .join(",")
+                })
+        )
+        .multi(if options.get_flag("no-multi") {
             false
         } else {
-            options.is_present("multi")
+            options.get_flag("multi")
         })
-        .layout(options.values_of("layout").and_then(|vals| vals.last()).unwrap_or(""))
-        .reverse(options.is_present("reverse"))
-        .no_hscroll(options.is_present("no-hscroll"))
-        .no_mouse(options.is_present("no-mouse"))
-        .no_clear(options.is_present("no-clear"))
-        .no_clear_start(options.is_present("no-clear-start"))
-        .tabstop(options.values_of("tabstop").and_then(|vals| vals.last()))
-        .tiebreak(options.values_of("tiebreak").map(|x| x.collect::<Vec<_>>().join(",")))
-        .tac(options.is_present("tac"))
-        .nosort(options.is_present("no-sort"))
-        .exact(options.is_present("exact"))
-        .regex(options.is_present("regex"))
-        .delimiter(options.values_of("delimiter").and_then(|vals| vals.last()))
-        .inline_info(options.is_present("inline-info"))
-        .header(options.values_of("header").and_then(|vals| vals.last()))
-        .header_lines(
-            options
-                .values_of("header-lines")
-                .and_then(|vals| vals.last())
-                .map(|s| s.parse::<usize>().unwrap_or(0))
-                .unwrap_or(0),
-        )
-        .layout(options.values_of("layout").and_then(|vals| vals.last()).unwrap_or(""))
+        .layout(options.get_one("layout").map(String::as_str).unwrap_or(""))
+        .reverse(options.get_flag("reverse"))
+        .no_hscroll(options.get_flag("no-hscroll"))
+        .no_mouse(options.get_flag("no-mouse"))
+        .no_clear(options.get_flag("no-clear"))
+        .no_clear_start(options.get_flag("no-clear-start"))
+        .tabstop(options.get_one("tabstop").map(String::as_str))
+        .tiebreak(options.get_one("tiebreak").cloned())
+        .tac(options.get_flag("tac"))
+        .nosort(options.get_flag("no-sort"))
+        .exact(options.get_flag("exact"))
+        .regex(options.get_flag("regex"))
+        .delimiter(options.get_one("delimiter").map(String::as_str))
+        .inline_info(options.get_flag("inline-info"))
+        .header(options.get_one("header").map(String::as_str))
+        .header_lines(options.get_one("header-lines").copied().unwrap_or(0))
+        .layout(options.get_one("layout").map(String::as_str).unwrap_or(""))
         .algorithm(FuzzyAlgorithm::of(
-            options.values_of("algorithm").and_then(|vals| vals.last()).unwrap(),
+            options.get_one("algorithm").map(String::as_str).unwrap(),
         ))
-        .case(match options.value_of("case") {
+        .case(match options.get_one("case").map(String::as_str) {
             Some("smart") => CaseMatching::Smart,
             Some("ignore") => CaseMatching::Ignore,
             _ => CaseMatching::Respect,
         })
-        .keep_right(options.is_present("keep-right"))
+        .keep_right(options.get_flag("keep-right"))
         .skip_to_pattern(
             options
-                .values_of("skip-to-pattern")
-                .and_then(|vals| vals.last())
+                .get_one("skip-to-pattern")
+                .map(String::as_str)
                 .unwrap_or(""),
         )
-        .select1(options.is_present("select-1"))
-        .exit0(options.is_present("exit-0"))
-        .sync(options.is_present("sync"))
-        .no_clear_if_empty(options.is_present("no-clear-if-empty"))
+        .select1(options.get_flag("select-1"))
+        .exit0(options.get_flag("exit-0"))
+        .sync(options.get_flag("sync"))
+        .no_clear_if_empty(options.get_flag("no-clear-if-empty"))
         .build()
         .unwrap()
 }
