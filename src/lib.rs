@@ -1,8 +1,3 @@
-#[macro_use]
-extern crate lazy_static;
-#[macro_use]
-extern crate log;
-
 use std::any::Any;
 use std::borrow::Cow;
 use std::fmt::Display;
@@ -42,6 +37,10 @@ mod reader;
 mod selection;
 mod theme;
 mod util;
+
+mod log_macros {
+    pub use log::{debug, error, info, trace, warn};
+}
 
 // Homemade spinlock implementation
 #[cfg(feature = "spinlock")]

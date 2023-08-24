@@ -1,10 +1,12 @@
-// Parse ANSI attr code
-use std::default::Default;
+//! Parse ANSI attr code
+
+use std::cmp::max;
 
 use beef::lean::Cow;
-use std::cmp::max;
 use tuikit::prelude::*;
 use vte::{Params, Perform};
+
+use crate::log_macros::*;
 
 /// An ANSI Parser, will parse one line at a time.
 ///

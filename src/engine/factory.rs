@@ -8,7 +8,7 @@ use crate::{CaseMatching, MatchEngine, MatchEngineFactory};
 use regex::Regex;
 use std::sync::Arc;
 
-lazy_static! {
+lazy_static::lazy_static! {
     static ref RE_AND: Regex = Regex::new(r"([^ |]+( +\| +[^ |]*)+)|( +)").unwrap();
     static ref RE_OR: Regex = Regex::new(r" +\| +").unwrap();
 }

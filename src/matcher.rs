@@ -1,15 +1,15 @@
+use std::rc::Rc;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::Arc;
-use std::thread;
-use std::thread::JoinHandle;
+use std::thread::{self, JoinHandle};
 
+use defer_drop::DeferDrop;
 use rayon::prelude::*;
 
 use crate::item::{ItemPool, MatchedItem};
+use crate::log_macros::*;
 use crate::spinlock::SpinLock;
 use crate::{CaseMatching, MatchEngineFactory};
-use defer_drop::DeferDrop;
-use std::rc::Rc;
 
 //==============================================================================
 pub struct MatcherControl {

@@ -1,6 +1,6 @@
 use std::borrow::Cow;
+use std::cmp::max;
 use std::env;
-
 use std::process::Command;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -18,6 +18,7 @@ use crate::global::current_run_num;
 use crate::header::Header;
 use crate::input::parse_action_arg;
 use crate::item::{parse_criteria, ItemPool, MatchedItem, RankBuilder, RankCriteria};
+use crate::log_macros::*;
 use crate::matcher::{Matcher, MatcherControl};
 use crate::options::SkimOptions;
 use crate::output::SkimOutput;
@@ -29,7 +30,6 @@ use crate::spinlock::SpinLock;
 use crate::theme::ColorTheme;
 use crate::util::{depends_on_items, inject_command, margin_string_to_size, parse_margin, InjectContext};
 use crate::{FuzzyAlgorithm, MatchEngineFactory, MatchRange, SkimItem};
-use std::cmp::max;
 
 const REFRESH_DURATION: i64 = 100;
 const SPINNER_DURATION: u32 = 200;
@@ -38,7 +38,7 @@ const SPINNERS_INLINE: [char; 2] = ['-', '<'];
 const SPINNERS_UNICODE: [char; 10] = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 const DELIMITER_STR: &str = r"[\t\n ]+";
 
-lazy_static! {
+lazy_static::lazy_static! {
     static ref RE_FIELDS: Regex = Regex::new(r"\\?(\{-?[0-9.,q]*?})").unwrap();
     static ref RE_PREVIEW_OFFSET: Regex = Regex::new(r"^\+([0-9]+|\{-?[0-9]+\})(-[0-9]+|-/[1-9][0-9]*)?$").unwrap();
     static ref DEFAULT_CRITERION: Vec<RankCriteria> =

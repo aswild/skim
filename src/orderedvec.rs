@@ -2,10 +2,13 @@
 // Normally, user will only care about the first several options. So we only keep several of them
 // in order. Other items are kept unordered and are sorted on demand.
 
-use defer_drop::DeferDrop;
-use rayon::prelude::ParallelSliceMut;
 use std::cell::{Ref, RefCell};
 use std::cmp::Ordering;
+
+use defer_drop::DeferDrop;
+use rayon::prelude::ParallelSliceMut;
+
+use crate::log_macros::*;
 
 const ORDERED_SIZE: usize = 300;
 const MAX_MOVEMENT: usize = 100;

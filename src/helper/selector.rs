@@ -2,6 +2,7 @@ use std::collections::HashSet;
 
 use regex::Regex;
 
+use crate::log_macros::*;
 use crate::{Selector, SkimItem};
 
 #[derive(Debug, Default)]

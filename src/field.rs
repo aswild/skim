@@ -1,7 +1,7 @@
 use regex::Regex;
 use std::cmp::{max, min};
 
-lazy_static! {
+lazy_static::lazy_static! {
     static ref FIELD_RANGE: Regex = Regex::new(r"^(?P<left>-?\d+)?(?P<sep>\.\.)?(?P<right>-?\d+)?$").unwrap();
 }
 

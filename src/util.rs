@@ -9,7 +9,7 @@ use unicode_width::UnicodeWidthChar;
 use crate::field::get_string_by_range;
 use crate::AnsiString;
 
-lazy_static! {
+lazy_static::lazy_static! {
     static ref RE_ESCAPE: Regex = Regex::new(r"['\U{00}]").unwrap();
     static ref RE_NUMBER: Regex = Regex::new(r"[+|-]?\d+").unwrap();
 }
@@ -309,7 +309,7 @@ pub struct InjectContext<'a> {
     pub cmd_query: &'a str,
 }
 
-lazy_static! {
+lazy_static::lazy_static! {
     static ref RE_ITEMS: Regex = Regex::new(r"\\?(\{ *-?[0-9.+]*? *})").unwrap();
     static ref RE_FIELDS: Regex = Regex::new(r"\\?(\{ *-?[0-9.,cq+n]*? *})").unwrap();
 }

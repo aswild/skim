@@ -2,16 +2,19 @@
 //!
 //! After reading in a line, reader will save an item into the pool(items)
 
-use crate::global::mark_new_run;
-use crate::options::SkimOptions;
-use crate::spinlock::SpinLock;
-use crate::{SkimItem, SkimItemReceiver};
-use crossbeam::channel::{bounded, select, Sender};
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::thread;
+
+use crossbeam::channel::{bounded, select, Sender};
+
+use crate::global::mark_new_run;
+use crate::log_macros::*;
+use crate::options::SkimOptions;
+use crate::spinlock::SpinLock;
+use crate::{SkimItem, SkimItemReceiver};
 
 const CHANNEL_SIZE: usize = 1024;
 

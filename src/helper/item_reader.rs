@@ -12,6 +12,7 @@ use regex::Regex;
 
 use crate::field::FieldRange;
 use crate::helper::item::DefaultSkimItem;
+use crate::log_macros::*;
 use crate::reader::CommandCollector;
 use crate::{SkimItem, SkimItemReceiver, SkimItemSender};
 

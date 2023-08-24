@@ -7,6 +7,7 @@ use std::ops::Deref;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 
+use crate::log_macros::*;
 use crate::spinlock::{SpinLock, SpinLockGuard};
 use crate::{MatchRange, Rank, SkimItem};
 

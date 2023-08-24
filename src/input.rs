@@ -1,11 +1,13 @@
 //! Input will listens to user input, modify the query string, send special
 //! keystrokes(such as Enter, Ctrl-p, Ctrl-n, etc) to the controller.
 
-use crate::event::{parse_event, Event};
 use regex::Regex;
 use std::collections::HashMap;
 use tuikit::event::Event as TermEvent;
 use tuikit::key::{from_keyname, Key};
+
+use crate::event::{parse_event, Event};
+use crate::log_macros::*;
 
 pub type ActionChain = Vec<Event>;
 
@@ -84,7 +86,7 @@ type KeyActions<'a> = (&'a str, Vec<(&'a str, Option<String>)>);
 /// parse key action string to `(key, action, argument)` tuple
 /// key_action is comma separated: 'ctrl-j:accept,ctrl-k:kill-line'
 pub fn parse_key_action(key_action: &str) -> Vec<KeyActions> {
-    lazy_static! {
+    lazy_static::lazy_static! {
         // match `key:action` or `key:action:arg` or `key:action(arg)` etc.
         static ref RE: Regex =
             Regex::new(r#"(?si)([^:]+?):((?:\+?[a-z-]+?(?:"[^"]*?"|'[^']*?'|\([^\)]*?\)|\[[^\]]*?\]|:[^:]*?)?\s*)+)(?:,|$)"#)

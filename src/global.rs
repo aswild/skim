@@ -7,7 +7,7 @@ use std::sync::Mutex;
 // => Well, we'll give each invocation a number, i.e. RUN_NUM
 // What if you invoke the same command and same arguments twice?
 // => We use NUM_MAP to specify the same run number.
-lazy_static! {
+lazy_static::lazy_static! {
     static ref RUN_NUM: AtomicU32 = AtomicU32::new(0);
     static ref SEQ: AtomicU32 = AtomicU32::new(1);
     static ref NUM_MAP: Mutex<HashMap<String, u32>> = {

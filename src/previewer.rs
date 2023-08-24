@@ -15,6 +15,7 @@ use tuikit::prelude::{Event as TermEvent, *};
 
 use crate::ansi::{ANSIParser, AnsiString};
 use crate::event::{Event, EventHandler, UpdateScreen};
+use crate::log_macros::*;
 use crate::spinlock::SpinLock;
 use crate::util::{atoi, depends_on_items, inject_command, InjectContext};
 use crate::{ItemPreview, PreviewContext, PreviewPosition, SkimItem};
