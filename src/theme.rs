@@ -1,4 +1,5 @@
-///! Handle the color theme
+//! Handle the color theme
+
 use crate::options::SkimOptions;
 use tuikit::prelude::*;
 

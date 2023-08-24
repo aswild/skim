@@ -1,4 +1,5 @@
-///! header of the items
+//! header of the items
+
 use crate::ansi::{ANSIParser, AnsiString};
 use crate::event::UpdateScreen;
 use crate::event::{Event, EventHandler};
