@@ -40,9 +40,37 @@ mod previewer;
 mod query;
 mod reader;
 mod selection;
-mod spinlock;
 mod theme;
 mod util;
+
+// Homemade spinlock implementation
+#[cfg(feature = "spinlock")]
+mod spinlock;
+
+// Wrap std::sync::Mutex to provide the same API
+#[cfg(not(feature = "spinlock"))]
+mod spinlock {
+    use std::sync::{Mutex, MutexGuard};
+
+    /// SpinLockGuard is a direct type alias for MutexGuard.
+    pub type SpinLockGuard<'a, T> = MutexGuard<'a, T>;
+
+    /// SpinLock is a newtype around Mutex so that its .lock() method panics on poison rather than
+    /// needing .unwrap() calls every time it's used.
+    pub struct SpinLock<T>(Mutex<T>);
+
+    impl<T> SpinLock<T> {
+        #[inline]
+        pub fn new(t: T) -> Self {
+            Self(Mutex::new(t))
+        }
+
+        #[inline]
+        pub fn lock(&self) -> SpinLockGuard<T> {
+            self.0.lock().expect("poisioned SpinLock Mutex")
+        }
+    }
+}
 
 //------------------------------------------------------------------------------
 pub trait AsAny {

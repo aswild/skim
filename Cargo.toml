@@ -47,3 +47,5 @@ thiserror = "1"
 [features]
 default = ["cli"]
 cli = ["dep:clap", "dep:atty", "dep:shlex", "dep:env_logger"]
+# use custom spinlock implemented instead of std::sync::Mutex
+spinlock = []
