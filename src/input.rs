@@ -86,14 +86,16 @@ type KeyActions<'a> = (&'a str, Vec<(&'a str, Option<String>)>);
 /// parse key action string to `(key, action, argument)` tuple
 /// key_action is comma separated: 'ctrl-j:accept,ctrl-k:kill-line'
 pub fn parse_key_action(key_action: &str) -> Vec<KeyActions> {
-    lazy_static::lazy_static! {
-        // match `key:action` or `key:action:arg` or `key:action(arg)` etc.
-        static ref RE: Regex =
-            Regex::new(r#"(?si)([^:]+?):((?:\+?[a-z-]+?(?:"[^"]*?"|'[^']*?'|\([^\)]*?\)|\[[^\]]*?\]|:[^:]*?)?\s*)+)(?:,|$)"#)
-                .unwrap();
-        // grab key, action and arg out.
-        static ref RE_BIND: Regex = Regex::new(r#"(?si)([a-z-]+)("[^"]+?"|'[^']+?'|\([^\)]+?\)|\[[^\]]+?\]|:[^:]+?)?(?:\+|$)"#).unwrap();
-    }
+    // match `key:action` or `key:action:arg` or `key:action(arg)` etc.
+    crate::lazy_regex!(
+        RE,
+        r#"(?si)([^:]+?):((?:\+?[a-z-]+?(?:"[^"]*?"|'[^']*?'|\([^\)]*?\)|\[[^\]]*?\]|:[^:]*?)?\s*)+)(?:,|$)"#
+    );
+    // grab key, action and arg out.
+    crate::lazy_regex!(
+        RE_BIND,
+        r#"(?si)([a-z-]+)("[^"]+?"|'[^']+?'|\([^\)]+?\)|\[[^\]]+?\]|:[^:]+?)?(?:\+|$)"#
+    );
 
     RE.captures_iter(key_action)
         .map(|caps| {

@@ -37,13 +37,9 @@ const SPINNER_DURATION: u32 = 200;
 const SPINNERS_INLINE: [char; 2] = ['-', '<'];
 const SPINNERS_UNICODE: [char; 10] = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 const DELIMITER_STR: &str = r"[\t\n ]+";
+const DEFAULT_CRITERION: &[RankCriteria] = &[RankCriteria::Score, RankCriteria::Begin, RankCriteria::End];
 
-lazy_static::lazy_static! {
-    static ref RE_FIELDS: Regex = Regex::new(r"\\?(\{-?[0-9.,q]*?})").unwrap();
-    static ref RE_PREVIEW_OFFSET: Regex = Regex::new(r"^\+([0-9]+|\{-?[0-9]+\})(-[0-9]+|-/[1-9][0-9]*)?$").unwrap();
-    static ref DEFAULT_CRITERION: Vec<RankCriteria> =
-        vec![RankCriteria::Score, RankCriteria::Begin, RankCriteria::End,];
-}
+crate::lazy_regex!(RE_PREVIEW_OFFSET, r"^\+([0-9]+|\{-?[0-9]+\})(-[0-9]+|-/[1-9][0-9]*)?$");
 
 pub struct Model {
     reader: Reader,
@@ -113,7 +109,7 @@ impl Model {
         let criterion = if let Some(ref tie_breaker) = options.tiebreak {
             tie_breaker.split(',').filter_map(parse_criteria).collect()
         } else {
-            DEFAULT_CRITERION.clone()
+            Vec::from(DEFAULT_CRITERION)
         };
 
         let rank_builder = Arc::new(RankBuilder::new(criterion));

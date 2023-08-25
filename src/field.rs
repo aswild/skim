@@ -1,9 +1,8 @@
-use regex::Regex;
 use std::cmp::{max, min};
 
-lazy_static::lazy_static! {
-    static ref FIELD_RANGE: Regex = Regex::new(r"^(?P<left>-?\d+)?(?P<sep>\.\.)?(?P<right>-?\d+)?$").unwrap();
-}
+use regex::Regex;
+
+crate::lazy_regex!(FIELD_RANGE, r"^(?P<left>-?\d+)?(?P<sep>\.\.)?(?P<right>-?\d+)?$");
 
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub enum FieldRange {

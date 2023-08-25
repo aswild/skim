@@ -72,6 +72,19 @@ mod spinlock {
 }
 
 //------------------------------------------------------------------------------
+
+macro_rules! lazy_regex {
+    ($vis:vis $name:ident, $re:literal) => {
+        $vis static $name: ::once_cell::sync::Lazy::<::regex::Regex> = $crate::lazy_regex!($re);
+    };
+
+    ($re:literal) => {
+        ::once_cell::sync::Lazy::<::regex::Regex>::new(|| Regex::new($re).unwrap())
+    };
+
+}
+pub(crate) use lazy_regex;
+
 pub trait AsAny {
     fn as_any(&self) -> &dyn Any;
     fn as_any_mut(&mut self) -> &mut dyn Any;

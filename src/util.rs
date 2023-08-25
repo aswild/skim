@@ -9,10 +9,10 @@ use unicode_width::UnicodeWidthChar;
 use crate::field::get_string_by_range;
 use crate::AnsiString;
 
-lazy_static::lazy_static! {
-    static ref RE_ESCAPE: Regex = Regex::new(r"['\U{00}]").unwrap();
-    static ref RE_NUMBER: Regex = Regex::new(r"[+|-]?\d+").unwrap();
-}
+crate::lazy_regex!(RE_ESCAPE, r"['\U{00}]");
+crate::lazy_regex!(RE_NUMBER, r"[+|-]?\d+");
+crate::lazy_regex!(RE_ITEMS, r"\\?(\{ *-?[0-9.+]*? *})");
+crate::lazy_regex!(RE_FIELDS, r"\\?(\{ *-?[0-9.,cq+n]*? *})");
 
 pub fn escape_single_quote(text: &str) -> String {
     RE_ESCAPE
@@ -307,11 +307,6 @@ pub struct InjectContext<'a> {
     pub selections: &'a [&'a str],
     pub query: &'a str,
     pub cmd_query: &'a str,
-}
-
-lazy_static::lazy_static! {
-    static ref RE_ITEMS: Regex = Regex::new(r"\\?(\{ *-?[0-9.+]*? *})").unwrap();
-    static ref RE_FIELDS: Regex = Regex::new(r"\\?(\{ *-?[0-9.,cq+n]*? *})").unwrap();
 }
 
 /// Check if a command depends on item
