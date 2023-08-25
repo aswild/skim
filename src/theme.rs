@@ -3,11 +3,6 @@
 use crate::options::SkimOptions;
 use tuikit::prelude::*;
 
-#[rustfmt::skip]
-lazy_static::lazy_static! {
-    pub static ref DEFAULT_THEME:  ColorTheme = ColorTheme::dark256();
-}
-
 /// The color scheme of skim's UI
 ///
 /// <pre>
@@ -44,6 +39,12 @@ pub struct ColorTheme {
     selected:             Color,
     header:               Color,
     border:               Color,
+}
+
+impl Default for ColorTheme {
+    fn default() -> Self {
+        ColorTheme::dark256()
+    }
 }
 
 #[rustfmt::skip]

@@ -15,7 +15,7 @@ use crate::global::current_run_num;
 use crate::item::MatchedItem;
 use crate::log_macros::*;
 use crate::orderedvec::OrderedVec;
-use crate::theme::{ColorTheme, DEFAULT_THEME};
+use crate::theme::ColorTheme;
 use crate::util::{print_item, reshape_string, LinePrinter};
 use crate::{DisplayContext, MatchRange, Matches, Selector, SkimItem, SkimOptions};
 
@@ -75,7 +75,7 @@ impl Selection {
             multi_selection: false,
             reverse: false,
             no_hscroll: false,
-            theme: Arc::new(*DEFAULT_THEME),
+            theme: Arc::new(ColorTheme::default()),
             latest_select_run_num: 0,
             pre_selected_watermark: 0,
             selector: None,

@@ -5,7 +5,6 @@ use crate::event::UpdateScreen;
 use crate::event::{Event, EventHandler};
 use crate::item::ItemPool;
 use crate::theme::ColorTheme;
-use crate::theme::DEFAULT_THEME;
 use crate::util::{print_item, str_lines, LinePrinter};
 use crate::{DisplayContext, Matches, SkimOptions};
 use defer_drop::DeferDrop;
@@ -29,7 +28,7 @@ impl Header {
             header: vec![],
             tabstop: 8,
             reverse: false,
-            theme: Arc::new(*DEFAULT_THEME),
+            theme: Arc::new(ColorTheme::default()),
             item_pool: Arc::new(DeferDrop::new(ItemPool::new())),
         }
     }

@@ -6,7 +6,7 @@ use unicode_width::UnicodeWidthStr;
 
 use crate::event::{Event, EventHandler, UpdateScreen};
 use crate::options::SkimOptions;
-use crate::theme::{ColorTheme, DEFAULT_THEME};
+use crate::theme::ColorTheme;
 
 #[derive(Clone, Copy, PartialEq)]
 enum QueryMode {
@@ -59,7 +59,7 @@ impl Query {
 
             pasted: None,
 
-            theme: Arc::new(*DEFAULT_THEME),
+            theme: Arc::new(ColorTheme::default()),
         }
     }
 
