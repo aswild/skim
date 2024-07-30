@@ -43,12 +43,7 @@ mod log_macros {
     pub use log::{debug, error, info, trace, warn};
 }
 
-// Homemade spinlock implementation
-#[cfg(feature = "spinlock")]
-mod spinlock;
-
 // Wrap std::sync::Mutex to provide the same API
-#[cfg(not(feature = "spinlock"))]
 mod spinlock {
     use std::sync::{Mutex, MutexGuard};
 
