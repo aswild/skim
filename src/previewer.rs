@@ -136,7 +136,6 @@ impl Previewer {
             (None, None) => false,
             (None, Some(_)) => true,
             (Some(_), None) => true,
-            #[allow(clippy::vtable_address_comparisons)]
             (Some(prev), Some(new)) => !Arc::ptr_eq(prev, new),
         };
 
@@ -624,7 +623,7 @@ impl Printer {
 
     fn adjust_scroll_print(&self, canvas: &mut dyn Canvas, ch: char, attr: Attr) -> Result<usize> {
         if self.row < self.skip_rows || self.col < self.skip_cols {
-            canvas.put_char_with_attr(usize::max_value(), usize::max_value(), ch, attr)
+            canvas.put_char_with_attr(usize::MAX, usize::MAX, ch, attr)
         } else {
             canvas.put_char_with_attr(self.row - self.skip_rows, self.col - self.skip_cols, ch, attr)
         }
