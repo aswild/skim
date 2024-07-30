@@ -339,7 +339,7 @@ impl Selection {
         } else {
             let regex = self.skip_to_pattern.as_ref().unwrap();
             if let Some(mat) = regex.find(text) {
-                text[..mat.start()].width_cjk()
+                text[..mat.start()].width()
             } else {
                 0
             }
@@ -512,7 +512,7 @@ impl Selection {
                 .col(2)
                 .tabstop(self.tabstop)
                 .container_width(container_width)
-                .text_width(display_content.stripped().width_cjk())
+                .text_width(display_content.stripped().width())
                 .hscroll_offset(self.hscroll_offset)
                 .build()
         };
