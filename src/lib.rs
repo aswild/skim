@@ -39,6 +39,7 @@ mod theme;
 mod util;
 
 mod log_macros {
+    #[allow(unused_imports)]
     pub use log::{debug, error, info, trace, warn};
 }
 
