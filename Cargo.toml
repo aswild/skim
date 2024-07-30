@@ -30,7 +30,7 @@ log = "0.4.17"
 env_logger = { version = "0.10", optional = true }
 time = "0.3.13"
 clap = { version = "4.1", optional = true, features = ["cargo", "deprecated", "wrap_help"] }
-tuikit = "0.4.6"
+tuikit = { git = "https://github.com/aswild/tuikit" }
 vte = "0.11.0"
 fuzzy-matcher = "0.3.7"
 rayon = "1.5.3"
